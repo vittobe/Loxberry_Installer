@@ -11,7 +11,7 @@ echo "https://www.heise.de/hintergrund/Benchmarks-fuer-Single-Board-Computer-485
 
 echo -e "\nInstalling additional software...\n"
 
-apt-get install p7zip-full iozone3 mbw openssl colorized-logs.
+apt-get install p7zip-full iozone3 mbw openssl colorized-logs
 
 echo -e "\nGrabbing some information about the system we are running on...\n" | tee -a benchmark.log
 
