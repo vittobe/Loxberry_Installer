@@ -50,7 +50,7 @@ echo "" | tee -a benchmark.log
 
 echo "" | tee -a benchmark.log
 
-inxi -Fc0 | tee benchmark.log
+inxi -Fc0 | tee -a benchmark.log
 
 echo "" | tee -a benchmark.log
 
@@ -83,11 +83,51 @@ echo -e "\nPerforming OpenSSL Benchmark\n" | tee -a benchmark.log
 
 openssl speed -elapsed aes-128-cbc | tee -a benchmark.log
 
+echo -e "\nPerforming CPU Stresstest - measure max. power consumtion in Watt during this time!\n" | tee -a benchmark.log
+
+. /boot/dietpi/func/dietpi-globals
+cpu_temp=$(G_OBTAIN_CPU_TEMP)
+STRESS_TEST_RESULTS_TEMP_MIN=$cpu_temp
+STRESS_TEST_RESULTS_TEMP_MAX=$cpu_temp
+STRESS_TEST_DURATION=300
+
+start_time=$(date)
+start_time_epoch=$(date '+%s')
+
+stress -t "$STRESS_TEST_DURATION"s -c $(( $G_HW_CPU_CORES * 2 )) &
+
+# Loop until stress completed
+while pgrep 'stress' &> /dev/null
+do
+	log_text=$(date)
+	cpu_temp=$(G_OBTAIN_CPU_TEMP)
+	if (( $cpu_temp > $STRESS_TEST_RESULTS_TEMP_MAX ))
+	then
+		STRESS_TEST_RESULTS_TEMP_MAX=$cpu_temp
+	elif (( $cpu_temp < $STRESS_TEST_RESULTS_TEMP_MIN ))
+	then
+		STRESS_TEST_RESULTS_TEMP_MIN=$cpu_temp
+	fi
+	log_text+=" | $cpu_temp °C"
+	log_text+=" | $(( $STRESS_TEST_DURATION + $start_time_epoch - $(date '+%s') )) seconds remaining"
+	echo "$log_text"
+	sleep 1
+done
+
+output_string=" - Start Time: $start_time
+ - End Time  : $(date)
+ - Duration  : $(( $(date '+%s') - $start_time_epoch )) seconds
+ - Min Temp  : $STRESS_TEST_RESULTS_TEMP_MIN °C
+ - Max Temp  : $STRESS_TEST_RESULTS_TEMP_MAX °C"
+
+echo -e "Stress test results:\n$output_string" | tee -a benchmark.log
+
 echo "" | tee -a benchmark.log
 sleep 2
 
-echo "Full results can be viewed here:"
-cat benchmark.log | ansi2txt | curl -F 'f:1=<-' ix.io
+echo -e "\nFull results can be viewed here:\n"
+#cat benchmark.log | curl -F 'f:1=<-' ix.io
+curl -F 'f:1=@benchmark.log' ix.io
 
 echo ""
 
