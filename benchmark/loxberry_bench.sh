@@ -50,7 +50,7 @@ echo "" | tee -a benchmark.log
 
 echo "" | tee -a benchmark.log
 
-inxi -Fc0
+inxi -Fc0 | tee benchmark.log
 
 echo "" | tee -a benchmark.log
 
