@@ -82,7 +82,7 @@ echo -e "\nPerforming OpenSSL Benchmark\n" | tee -a benchmark.log
 
 openssl speed -elapsed aes-128-cbc | tee -a benchmark.log
 
-echo -e "\nPerforming CPU Stresstest - measure max. power consumtion in Watt during this time!\n" | tee -a benchmark.log
+echo -e "\nPerforming CPU Stresstest - measure max. power consumption in Watt during this test!\n" | tee -a benchmark.log
 
 . /boot/dietpi/func/dietpi-globals
 cpu_temp=$(G_OBTAIN_CPU_TEMP)
