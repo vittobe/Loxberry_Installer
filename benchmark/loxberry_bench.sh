@@ -29,7 +29,6 @@ echo -e "\nInstalling additional software...\n"
 apt-get -y install p7zip-full mbw openssl colorized-logs dnsutils dmidecode file bluez hddtemp net-tools ipmitool freeipmi-tools lvm2 mdadm lm-sensors smartmontools tree upower libio-socket-ssl-perl libcpanel-json-xs-perl libjson-xs-perl libxml-dumper-perl inxi stress
 
 if [[ $G_RASPBIAN -eq "1" ]] && [[ ! -e '/usr/local/bin/iozone' ]]; then
-	rm /tmp/iozone
 	wget https://raw.githubusercontent.com/mschlenstedt/Loxberry_Installer/main/benchmark/iozone -O /usr/local/bin/iozone
 	chmod +x /usr/local/bin/iozone
 else
