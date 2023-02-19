@@ -26,7 +26,7 @@ echo "https://www.heise.de/hintergrund/Benchmarks-fuer-Single-Board-Computer-485
 
 echo -e "\nInstalling additional software...\n"
 
-apt-get -y install p7zip-full mbw openssl colorized-logs dnsutils dmidecode file bluez hddtemp net-tools ipmitool freeipmi-tools lvm2 mdadm lm-sensors smartmontools tree upower libio-socket-ssl-perl libcpanel-json-xs-perl libjson-xs-perl libxml-dumper-perl inxi
+apt-get -y install p7zip-full mbw openssl colorized-logs dnsutils dmidecode file bluez hddtemp net-tools ipmitool freeipmi-tools lvm2 mdadm lm-sensors smartmontools tree upower libio-socket-ssl-perl libcpanel-json-xs-perl libjson-xs-perl libxml-dumper-perl inxi stress
 
 if [[ $G_RASPBIAN -eq "1" ]] && [[ ! -e '/usr/local/bin/iozone' ]]; then
 	rm /tmp/iozone
