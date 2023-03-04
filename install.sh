@@ -906,14 +906,18 @@ TITLE "Disable root login via ssh and password..."
 /boot/dietpi/func/dietpi-set_software disable_ssh_password_logins root
 
 # Installing NodeJS
-TITLE "Installing NodeJS V$NODEJS_VERSION"
-curl -fsSL https://deb.nodesource.com/setup_$NODEJS_VERSION.x | bash - && apt install -y nodejs
+TITLE "Installing YARN and NodeJS"
+if [ $G_HW_MODEL > 1 ]; then # Not for Pi1 and Zero1
+	TITLE "Installing NodeJS V$NODEJS_VERSION over the Distro Package (too old...)"
+	curl -fsSL https://deb.nodesource.com/setup_$NODEJS_VERSION.x | bash -
+fi
 
 # Installing YARN
-TITLE "Installing YARN"
 curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/yarnkey.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-apt update && apt install yarn
+apt update
+apt install -y nodejs
+apt install -y yarn
 
 # Installing PIP2
 TITLE "Installing PIP2"
