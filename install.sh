@@ -958,6 +958,7 @@ TITLE "Create LoxBerry Config from Defaults..."
 
 su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl"
 su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl" # Run twice
+su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/sbin/mqtt-handler.pl action=updateconfig"
 
 if [ ! -e $LBHOME/config/system/general.json ]; then
 	FAIL "Could not create default config files.\n"
