@@ -538,7 +538,7 @@ if [ -e /etc/php/$PHPVER ] && [ ! -e /etc/php/$PHPVER/apache2/conf.d/20-loxberry
 	rm /etc/php/$PHPVER/cli/conf.d/20-loxberry.ini
 	ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini
 	ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/cgi/conf.d/20-loxberry-apache.ini
-	ln -s $LBHOME/system/php/20-loxberry-cli.ini /etc/php/$PHPVER/cli/conf.d/20-loxberry-cli.ini
+	ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/$PHPVER/cli/conf.d/20-loxberry-cli.ini
 fi
 
 if [ ! -L  /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini ]; then
