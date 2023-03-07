@@ -967,18 +967,6 @@ else
 	OK "Successfully created default config files."
 fi
 
-# Set correct File Permissions
-TITLE "Re-Setting File Permissions..."
-
-$LBHOME/sbin/resetpermissions.sh
-
-if [ $? != 0 ]; then
-	FAIL "Could not set File Permissions for LoxBerry.\n"
-	exit 1
-else
-	OK "Successfully set File Permissions for LoxBerry."
-fi
-
 # Restart Systemd Login Service
 TITLE "Correct Systemd Login Service..."
 
@@ -996,6 +984,11 @@ if ! /bin/systemctl --no-pager status apache2; then
 else
        OK "Successfully reconfigured Apache2."
 fi
+
+# Install some default configs for root
+TITLE "Installing some default config files for root..."
+cp $LBHOME/.vimrc /root
+cp $LBHOME/.profile /root
 
 # Set correct File Permissions - again
 TITLE "Setting File Permissions (again)..."
