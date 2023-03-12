@@ -526,6 +526,7 @@ else
 fi
 
 # PHP
+apt install php
 PHPVER=$(apt-cache show php | grep "Depends: " | sed "s/Depends: php//")
 TITLE "Configuring PHP $PHPVER..."
 
