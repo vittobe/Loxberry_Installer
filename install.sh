@@ -367,7 +367,7 @@ apt update
 # Remove dhcpd - See issue 135
 TITLE "Removing dhcpd..."
 
-apt purge dhcpcd
+apt purge dhcpcd5
 
 # Adding user loxberry to different additional groups
 TITLE "Adding user LoxBerry to some additional groups..."
