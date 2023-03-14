@@ -365,7 +365,7 @@ rm /etc/apt/apt.conf.d/98dietpi-uncompressed
 apt update
 
 # Remove dhcpd - See issue 135
-TITLE "Removing dhcpd..."
+TITLE "Removing dhcpcd5..."
 
 apt purge dhcpcd5
 
