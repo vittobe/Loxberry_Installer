@@ -908,7 +908,7 @@ TITLE "Disable root login via ssh and password..."
 
 # Installing NodeJS
 TITLE "Installing YARN and NodeJS"
-if [ $G_HW_MODEL > 1 ]; then # Not for Pi1 and Zero1
+if [ $G_HW_MODEL -gt 1 ]; then # Not for Pi1 and Zero1
 	TITLE "Installing NodeJS V$NODEJS_VERSION over the Distro Package (too old...)"
 	curl -fsSL https://deb.nodesource.com/setup_$NODEJS_VERSION.x | bash -
 fi
