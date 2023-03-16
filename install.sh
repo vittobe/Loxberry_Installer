@@ -362,12 +362,12 @@ fi
 
 rm /etc/apt/apt.conf.d/98dietpi-uncompressed
 /boot/dietpi/func/dietpi-set_software apt-cache clean
-apt update
+apt-get -y update
 
 # Remove dhcpd - See issue 135
 TITLE "Removing dhcpcd5..."
 
-apt purge dhcpcd5
+apt-get -y purge dhcpcd5
 
 # Adding user loxberry to different additional groups
 TITLE "Adding user LoxBerry to some additional groups..."
