@@ -970,6 +970,11 @@ else
 	OK "Successfully created default config files."
 fi
 
+# Set Timezone to LoxBerry's Standard
+TITLE "Setting Timezone to Default..."
+timedatectl set-timezone Europe/Berlin
+timedatectl
+
 # Restart Systemd Login Service
 TITLE "Correct Systemd Login Service..."
 
