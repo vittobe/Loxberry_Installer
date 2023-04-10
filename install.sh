@@ -764,6 +764,7 @@ ln -s $LBHOME/system/samba/credentials /etc/creds
 sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/autofs/loxberry_smb.autofs
 ln -s $LBHOME/system/autofs/loxberry_smb.autofs /etc/auto.master.d/loxberry_smb.autofs
 chmod 0755 $LBHOME/system/autofs/loxberry_smb.autofs
+rm $LBHOME/system/storage/smb/.dummy
 /bin/systemctl restart autofs
 
 if ! /bin/systemctl --no-pager status autofs; then
