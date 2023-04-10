@@ -321,7 +321,7 @@ TITLE "Installing additional software packages from apt repository..."
 
 /boot/dietpi/func/dietpi-set_software apt reset
 /boot/dietpi/func/dietpi-set_software apt compress disable
-/boot/dietpi/func/dietpi-set_software apt-cache clean
+/boot/dietpi/func/dietpi-set_software apt cache clean
 apt update
 
 if [ -e $LBHOME/packages.txt ]; then
@@ -361,9 +361,9 @@ else
         OK "Successfully installed all queued packages.\n"
 fi
 
-rm /etc/apt/apt.conf.d/98dietpi-uncompressed
-/boot/dietpi/func/dietpi-set_software apt-cache clean
-apt-get -y update
+/boot/dietpi/func/dietpi-set_software apt compress enable
+/boot/dietpi/func/dietpi-set_software apt cache clean
+apt update
 
 # Remove dhcpd - See issue 135
 TITLE "Removing dhcpcd5..."
