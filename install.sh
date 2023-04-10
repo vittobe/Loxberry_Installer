@@ -319,7 +319,8 @@ TITLE "Installing OpenSSH server..."
 # Configuring hardware architecture
 TITLE "Installing additional software packages from apt repository..."
 
-echo 'Acquire::GzipIndexes "false";' > /etc/apt/apt.conf.d/98dietpi-uncompressed
+/boot/dietpi/func/dietpi-set_software apt reset
+/boot/dietpi/func/dietpi-set_software apt compress disable
 /boot/dietpi/func/dietpi-set_software apt-cache clean
 apt update
 
