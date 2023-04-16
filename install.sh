@@ -970,6 +970,14 @@ else
 	OK "Successfully created default config files."
 fi
 
+# MQTT Gateway compatibility
+ln -f -s $LBHOME/webfrontend/html/system/tools/mqtt/receive.php $LBHOME/webfrontend/html/plugins/mqttgateway/receive.php
+ln -f -s $LBHOME/webfrontend/html/system/tools/mqtt/receive_pub.php $LBHOME/webfrontend/html/plugins/mqttgateway/receive_pub.php
+ln -f -s $LBHOME/webfrontend/htmlauth/system/tools/mqtt.php $LBHOME/webfrontend/htmlauth/plugins/mqttgateway/mqtt.php
+chown -R loxberry:loxberry $LBHOME/webfrontend/htmlauth/plugins/mqttgateway
+chown -R loxberry:loxberry $LBHOME/webfrontend/html/plugins/mqttgateway
+chown -R loxberry:loxberry $LBHOME/webfrontend/html/system/tools/mqtt
+
 # Set Timezone to LoxBerry's Standard
 TITLE "Setting Timezone to Default..."
 timedatectl set-timezone Europe/Berlin
