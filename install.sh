@@ -288,7 +288,6 @@ if [ $? != 0 ]; then
 else
 	OK "Successfully set default password for user 'root'."
 fi
-deluser --quiet dietpi > /dev/null 2>&1
 
 # Configuring hardware architecture
 TITLE "Configuring your hardware architecture $G_HW_ARCH_NAM..."
@@ -381,6 +380,7 @@ TITLE "Adding user LoxBerry to some additional groups..."
 /usr/sbin/usermod -a -G www-data loxberry
 /usr/sbin/usermod -a -G video loxberry
 /usr/sbin/usermod -a -G i2c loxberry
+/usr/sbin/usermod -a -G dietpi loxberry
 
 OK "Successfully configured additional groups."
 
