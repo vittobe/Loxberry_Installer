@@ -259,7 +259,7 @@ else
 fi
 
 # Adding User loxberry
-TITLE "Adding user 'loxberry', setting default passwd, removing user 'dietpi'..."
+TITLE "Adding user 'loxberry', setting default passwd, resetting user 'dietpi'..."
 
 killall -u loxberry
 sleep 3
@@ -288,6 +288,16 @@ if [ $? != 0 ]; then
 else
 	OK "Successfully set default password for user 'root'."
 fi
+
+newdietpipassword=$(echo $random | md5sum | head -c 20; echo)
+echo "dietpi:$newdietpipassword" | /usr/sbin/chpasswd -c SHA512
+if [ $? != 0 ]; then
+	FAIL "Could not set password for user 'dietpi'.\n"
+	exit 1
+else
+	OK "Successfully set default password for user 'dietpi'."
+fi
+
 
 # Configuring hardware architecture
 TITLE "Configuring your hardware architecture $G_HW_ARCH_NAM..."
