@@ -47,6 +47,7 @@ done
 shift $((OPTIND-1))
 
 # install needed packages
+apt-get update --allow-releaseinfo-change
 apt-get -y install jq git
 
 # Stop loxberry Service
