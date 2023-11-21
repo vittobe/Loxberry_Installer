@@ -14,6 +14,8 @@ NODEJS_VERSION="20"
 # Needed for some LoxBerry scripts
 export LBHOMEDIR=$LBHOME
 export PERL5LIB=$LBHOME/libs/perllib
+export APT_LISTCHANGES_FRONTEND="none"
+export DEBIAN_FRONTEND="noninteractive"
 
 # Run as root
 if (( $EUID != 0 )); then
@@ -47,8 +49,8 @@ done
 shift $((OPTIND-1))
 
 # install needed packages
-apt-get -y update --allow-releaseinfo-change
-apt-get -y install jq git
+apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install jq git
 
 # Stop loxberry Service
 if /bin/systemctl --no-pager status apache2.service; then
@@ -59,12 +61,12 @@ if /bin/systemctl --no-pager status loxberry.service; then
 	/bin/systemctl stop loxberry.service
 fi
 if /bin/systemctl --no-pager status ssdpd.service; then
-    /bin/systemctl disable ssdpd.service
-    /bin/systemctl stop ssdpd.service
+	/bin/systemctl disable ssdpd.service
+	/bin/systemctl stop ssdpd.service
 fi
 if /bin/systemctl --no-pager status mosquitto.service; then
-    /bin/systemctl disable mosquitto.service
-    /bin/systemctl stop mosquitto.service
+	/bin/systemctl disable mosquitto.service
+	/bin/systemctl stop mosquitto.service
 fi
 if /bin/systemctl --no-pager status createtmpfs.service; then
 	/bin/systemctl disable createtmpfs.service
@@ -332,9 +334,9 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt reset
 /boot/dietpi/func/dietpi-set_software apt compress disable
 /boot/dietpi/func/dietpi-set_software apt cache clean
-apt-get -y update
+apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 
-if [ -e /root/packages.txt ]; then
+if [ -e $LBHOME/packages$TARGET_VERSION_ID.txt ]; then
         PACKAGES=""
         echo ""
         while read entry
@@ -357,17 +359,20 @@ if [ -e /root/packages.txt ]; then
                         OK "Add package $PACKAGE to the installation queue..."
                         PACKAGES+="$PACKAGE "
                 fi
-        done < /root/packages.txt
+        done < $LBHOME/packages$TARGET_VERSION_ID.txt
 else
-        FAIL "Could not find packages list: $LBHOME/packages.txt.\n"
+        FAIL "Could not find packages list: $LBHOME/packages$TARGET_VERSION_ID.txt.\n"
         exit 1
 fi
 
+echo ""
+echo "These packages will be installed now:"
 echo $PACKAGES
 echo ""
-apt-get -y install $PACKAGES
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
 if [ $? != 0 ]; then
-        WARNING "Could not install (at least some) queued packages.\n"
+        FAIL "Could not install (at least some) queued packages.\n"
+	exit 1
 else
         OK "Successfully installed all queued packages.\n"
 fi
@@ -379,7 +384,14 @@ apt update
 # Remove dhcpd - See issue 135
 TITLE "Removing dhcpcd5..."
 
-apt-get -y purge dhcpcd5
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge dhcpcd5
+
+# Remove appamor
+TITLE "Removing AppArmor..."
+
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge apparmor
+
+apt-get -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages --purge autoremove
 
 # Adding user loxberry to different additional groups
 TITLE "Adding user LoxBerry to some additional groups..."
@@ -539,21 +551,24 @@ else
 fi
 
 # PHP
-apt-get -y install php
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install php
 PHPVER=$(apt-cache show php | grep "Depends: " | sed "s/Depends: php//")
 TITLE "Configuring PHP $PHPVER..."
 
-if [ -e /etc/php/$PHPVER ] && [ ! -e /etc/php/$PHPVER/apache2/conf.d/20-loxberry.ini ]; then
-	mkdir -p /etc/php/$PHPVER/apache2/conf.d
-	mkdir -p /etc/php/$PHPVER/cgi/conf.d
-	mkdir -p /etc/php/$PHPVER/cli/conf.d
-	rm /etc/php/$PHPVER/apache2/conf.d/20-loxberry.ini
-	rm /etc/php/$PHPVER/cgi/conf.d/20-loxberry.ini
-	rm /etc/php/$PHPVER/cli/conf.d/20-loxberry.ini
-	ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini
-	ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/cgi/conf.d/20-loxberry-apache.ini
-	ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/$PHPVER/cli/conf.d/20-loxberry-cli.ini
+if [ ! -e /etc/php/$PHPVER ]; then
+	FAIL "Could not set up PHP - target folder /etc/php/$PHPVER does not exist.\n"
+	exit 1
 fi
+
+mkdir -p /etc/php/$PHPVER/apache2/conf.d
+mkdir -p /etc/php/$PHPVER/cgi/conf.d
+mkdir -p /etc/php/$PHPVER/cli/conf.d
+rm /etc/php/$PHPVER/apache2/conf.d/20-loxberry.ini
+rm /etc/php/$PHPVER/cgi/conf.d/20-loxberry.ini
+rm /etc/php/$PHPVER/cli/conf.d/20-loxberry.ini
+ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini
+ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/cgi/conf.d/20-loxberry-apache.ini
+ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/$PHPVER/cli/conf.d/20-loxberry-cli.ini
 
 if [ ! -L  /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini ]; then
 	FAIL "Could not set up PHP $PHPVER.\n"
@@ -593,7 +608,7 @@ if [ ! -e /etc/systemd/system/apache2.service.d/privatetmp.conf ]; then
 	ln -s $LBHOME/system/systemd/apache-privatetmp.conf /etc/systemd/system/apache2.service.d/privatetmp.conf
 fi
 
-if [ ! -L  /etc/systemd/system/apache2.service.d/privatetmp.conf]; then
+if [ ! -L  /etc/systemd/system/apache2.service.d/privatetmp.conf ]; then
 	FAIL "Could not set up Apache2 Private Temp Config.\n"
 	exit 1
 else
@@ -621,7 +636,6 @@ fi
 
 if [ -e /boot/config.txt ]; then # Enable Wifi on Raspberrys
 	G_CONFIG_INJECT 'dtoverlay=disable-wifi' '#dtoverlay=disable-wifi' /boot/config.txt
-reboot
 fi
 
 # Configuring Samba
@@ -938,23 +952,9 @@ fi
 curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
 
-apt-get -y update
-apt-get -y install nodejs
-apt-get -y install yarn
-
-# Installing PIP2
-TITLE "Installing PIP2"
-
-curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output /tmp/get-pip.py
-python2 /tmp/get-pip.py
-
-# Installing raspi-config if we are on a raspberry
-if echo $HWMODELFILENAME | grep -q "raspberry"; then
-	TITLE "Installing raspi-config"
-	rm /usr/bin/raspi-config
-	curl -L https://raw.githubusercontent.com/RPi-Distro/raspi-config/master/raspi-config -o /usr/bin/raspi-config
-	chmod +x /usr/bin/raspi-config
-fi
+apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install nodejs
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install yarn
 
 # Configuring /etc/hosts
 TITLE "Setting up /etc/hosts and /etc/hostname..."
