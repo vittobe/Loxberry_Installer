@@ -334,7 +334,7 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt cache clean
 apt update
 
-if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
+if [ -e "$LBHOME/packages.txt" ]; then
         PACKAGES=""
         echo ""
         while read entry
@@ -357,7 +357,7 @@ if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
                         OK "Add package $PACKAGE to the installation queue..."
                         PACKAGES+="$PACKAGE "
                 fi
-        done < "$LBHOME/packages${TARGET_VERSION_ID}.txt"
+        done < "$LBHOME/packages.txt"
 else
         FAIL "Could not find packages list: $LBHOME/packages${TARGET_VERSION_ID}.txt.\n"
         exit 1
