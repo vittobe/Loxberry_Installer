@@ -618,6 +618,10 @@ else
 	OK "Successfully configured Network Interfaces."
 fi
 
+if [ -e /boot/config.txt ]; then # Enable Wifi on Raspberrys
+	G_CONFIG_INJECT 'dtoverlay=disable-wifi' '#dtoverlay=disable-wifi' /boot/config.txt
+fi
+
 # Configuring Samba
 TITLE "Configuring Samba..."
 
