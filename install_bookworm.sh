@@ -638,6 +638,17 @@ if [ -e /boot/config.txt ]; then # Enable Wifi on Raspberrys
 	G_CONFIG_INJECT 'dtoverlay=disable-wifi' '#dtoverlay=disable-wifi' /boot/config.txt
 fi
 
+# Configuring Python 3 - reenable pip installations
+TITLE "Configuring Python3..."
+
+echo -e '[global]\nbreak-system-packages=true' > /etc/pip.conf
+if [ -e /etc/pip.conf ]; then
+	OK "Python3 configured successfully.\n"
+else
+	FAIL "Could not set up Python 3.\n"
+	exit 1
+fi
+
 # Configuring Samba
 TITLE "Configuring Samba..."
 
