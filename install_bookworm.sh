@@ -237,6 +237,7 @@ if [ ! -z $BRANCH ]; then
 		exit 1
 	else
 		OK "Successfully downloaded LoxBerry sources."
+  		shopt -s dotglob
 		mv $LBHOME/Loxberry/* $LBHOME
 		rm -r $LBHOME/Loxberry
 	fi
