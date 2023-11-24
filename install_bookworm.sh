@@ -7,6 +7,8 @@ TARGET_VERSION_ID="12"
 TARGET_PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
 LBHOME="/opt/loxberry"
 NODEJS_VERSION="20"
+PHPVER_PROD=7.4
+PHPVER_TEST=8.2
 
 #
 ########################################################################
@@ -50,7 +52,7 @@ shift $((OPTIND-1))
 
 # install needed packages
 apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install jq git
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install jq git lsb-release
 
 # Stop loxberry Service
 if /bin/systemctl --no-pager status apache2.service; then
@@ -335,6 +337,27 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt reset
 /boot/dietpi/func/dietpi-set_software apt compress disable
 /boot/dietpi/func/dietpi-set_software apt cache clean
+
+# Configure PHP 
+curl -sL https://packages.sury.org/php/apt.gpg | gpg --dearmor | tee /usr/share/keyrings/deb.sury.org-php.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+
+echo "Package: *
+Pin: release o=Debian
+Pin-Priority: 900" > /etc/apt/preferences.d/stable
+
+echo "Package: php${PHPVER_TEST}*
+Pin: release o=Debian
+Pin-Priority: 900
+
+Package: php-*
+Pin: origin \"packages.sury.org\"
+Pin-Priority: 900
+
+Package: php${PHPVER_PROD}*
+Pin: origin \"packages.sury.org\"
+Pin-Priority: 900" > /etc/apt/preferences.d/php
+
 apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 
 if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
@@ -551,32 +574,61 @@ else
 	OK "Successfully set up service for Mosquitto."
 fi
 
-# PHP
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install php
-PHPVER=$(apt-cache show php | grep "Depends: " | sed "s/Depends: php//")
-TITLE "Configuring PHP $PHPVER..."
+# PHP - we install PHP8.2 for testing and 7.4 for production
+#apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install php${PHPVER_TEST} php${PHPVER_PROD}
 
-if [ ! -e /etc/php/$PHPVER ]; then
-	FAIL "Could not set up PHP - target folder /etc/php/$PHPVER does not exist.\n"
+TITLE "Configuring PHP ${PHPVER_PROD}..."
+
+if [ ! -e /etc/php/${PHPVER_PROD} ]; then
+	FAIL "Could not set up PHP - target folder /etc/php/${PHPVER_PROD} does not exist.\n"
 	exit 1
 fi
 
-mkdir -p /etc/php/$PHPVER/apache2/conf.d
-mkdir -p /etc/php/$PHPVER/cgi/conf.d
-mkdir -p /etc/php/$PHPVER/cli/conf.d
-rm /etc/php/$PHPVER/apache2/conf.d/20-loxberry.ini
-rm /etc/php/$PHPVER/cgi/conf.d/20-loxberry.ini
-rm /etc/php/$PHPVER/cli/conf.d/20-loxberry.ini
-ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini
-ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/cgi/conf.d/20-loxberry-apache.ini
-ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/$PHPVER/cli/conf.d/20-loxberry-cli.ini
+mkdir -p /etc/php/${PHPVER_PROD}/apache2/conf.d
+mkdir -p /etc/php/${PHPVER_PROD}/cgi/conf.d
+mkdir -p /etc/php/${PHPVER_PROD}/cli/conf.d
+rm /etc/php/${PHPVER_PROD}/apache2/conf.d/20-loxberry.ini
+rm /etc/php/${PHPVER_PROD}/cgi/conf.d/20-loxberry.ini
+rm /etc/php/${PHPVER_PROD}/cli/conf.d/20-loxberry.ini
+ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_PROD}/apache2/conf.d/20-loxberry-apache.ini
+ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_PROD}/cgi/conf.d/20-loxberry-apache.ini
+ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/${PHPVER_PROD}/cli/conf.d/20-loxberry-cli.ini
 
-if [ ! -L  /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini ]; then
-	FAIL "Could not set up PHP $PHPVER.\n"
+if [ ! -L  /etc/php/${PHPVER_PROD}/apache2/conf.d/20-loxberry-apache.ini ]; then
+	FAIL "Could not set up PHP ${PHPVER_PROD}.\n"
 	exit 1
 else
-	OK "Successfully set up PHP $PHPVER."
+	OK "Successfully set up PHP ${PHPVER_PROD}."
 fi
+
+TITLE "Configuring PHP ${PHPVER_TEST}..."
+
+if [ ! -e /etc/php/${PHPVER_TEST} ]; then
+	FAIL "Could not set up PHP - target folder /etc/php/${PHPVER_TEST} does not exist.\n"
+	exit 1
+fi
+
+mkdir -p /etc/php/${PHPVER_TEST}/apache2/conf.d
+mkdir -p /etc/php/${PHPVER_TEST}/cgi/conf.d
+mkdir -p /etc/php/${PHPVER_TEST}/cli/conf.d
+rm /etc/php/${PHPVER_TEST}/apache2/conf.d/20-loxberry.ini
+rm /etc/php/${PHPVER_TEST}/cgi/conf.d/20-loxberry.ini
+rm /etc/php/${PHPVER_TEST}/cli/conf.d/20-loxberry.ini
+ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_TEST}/apache2/conf.d/20-loxberry-apache.ini
+ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_TEST}/cgi/conf.d/20-loxberry-apache.ini
+ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/${PHPVER_TEST}/cli/conf.d/20-loxberry-cli.ini
+
+if [ ! -L  /etc/php/${PHPVER_TEST}/apache2/conf.d/20-loxberry-apache.ini ]; then
+	FAIL "Could not set up PHP ${PHPVER_TEST}.\n"
+	exit 1
+else
+	OK "Successfully set up PHP ${PHPVER_TEST}."
+fi
+
+
+TITLE "Enabling PHP ${PHPVER_PROD}..."
+update-alternatives --set php /usr/bin/php${PHPVER_PROD}
+
 
 # Configuring Apache2
 TITLE "Configuring Apache2..."
@@ -601,7 +653,7 @@ a2dissite 001-default-ssl
 rm $LBHOME/system/apache2/mods-available/php*
 rm $LBHOME/system/apache2/mods-enabled/php*
 cp /etc/apache2.orig/mods-available/php* /etc/apache2/mods-available
-a2enmod php*
+a2enmod php${PHPVER_PROD}
 
 # Disable PrivateTmp for Apache2 on systemd
 if [ ! -e /etc/systemd/system/apache2.service.d/privatetmp.conf ]; then
