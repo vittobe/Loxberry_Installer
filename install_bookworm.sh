@@ -389,10 +389,19 @@ else
         exit 1
 fi
 
+# First install some packages which make trouble on Rapsberrys if installed later on...
 echo ""
-echo "These packages will be installed now:"
+echo "First install some packages seperately, because these make trouble at least on Rapsberrys if installed later on..."
+echo ""
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install libssl-dev
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install libc6-dev
+apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install libc6-dbg​
+
+echo ""
+echo "And now the other packages... These packages will be installed now:"
 echo $PACKAGES
 echo ""
+
 apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
 if [ $? != 0 ]; then
         FAIL "Could not install (at least some) queued packages.\n"
