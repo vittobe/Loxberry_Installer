@@ -1013,20 +1013,15 @@ TITLE "Disable root login via ssh and password..."
 /boot/dietpi/func/dietpi-set_software disable_ssh_password_logins root
 
 # Installing NodeJS
-TITLE "Installing YARN and NodeJS"
-if [ $G_HW_MODEL -gt 1 ]; then # Not for Pi1 and Zero1
-	TITLE "Installing NodeJS V$NODEJS_VERSION over the Distro Package (too old...)"
-	#curl -fsSL https://deb.nodesource.com/setup_$NODEJS_VERSION.x | bash -
-	curl -sL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor | tee /usr/share/keyrings/nodesource.gpg >/dev/null
-	echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODEJS_VERSION.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-fi
+TITLE "Installing NodeJS"
+/boot/dietpi/dietpi-software install 9
 
 # Installing YARN
+TITLE "Installing Yarn"
 curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
 
 apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install nodejs
 apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install yarn
 
 # Configuring /etc/hosts
