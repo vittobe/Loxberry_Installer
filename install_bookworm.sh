@@ -341,22 +341,6 @@ TITLE "Installing additional software packages from apt repository..."
 curl -sL https://packages.sury.org/php/apt.gpg | gpg --dearmor | tee /usr/share/keyrings/deb.sury.org-php.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
 
-echo "Package: *
-Pin: release o=Debian
-Pin-Priority: 900" > /etc/apt/preferences.d/stable
-
-echo "Package: php${PHPVER_TEST}*
-Pin: release o=Debian
-Pin-Priority: 900
-
-Package: php-*
-Pin: origin \"packages.sury.org\"
-Pin-Priority: 900
-
-Package: php${PHPVER_PROD}*
-Pin: origin \"packages.sury.org\"
-Pin-Priority: 900" > /etc/apt/preferences.d/php
-
 apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 
 if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
@@ -388,16 +372,8 @@ else
         exit 1
 fi
 
-# First install some packages which make trouble on Rapsberrys if installed later on...
 echo ""
-echo "First install some packages seperately, because these make trouble at least on Rapsberrys if installed later on..."
-echo ""
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install libssl-dev
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install libc6-dev
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install libc6-dbg​
-
-echo ""
-echo "And now the other packages... These packages will be installed now:"
+echo "These packages will be installed now:"
 echo $PACKAGES
 echo ""
 
@@ -411,7 +387,7 @@ fi
 
 /boot/dietpi/func/dietpi-set_software apt compress enable
 /boot/dietpi/func/dietpi-set_software apt cache clean
-apt update
+apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 
 # Remove dhcpd - See issue 135
 TITLE "Removing dhcpcd5..."
