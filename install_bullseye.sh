@@ -3,11 +3,10 @@
 ########################################################################
 # Adjust this to the latest release image
 
-TARGET_VERSION_ID="12"
-TARGET_PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+TARGET_VERSION_ID="11"
+TARGET_PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
 LBHOME="/opt/loxberry"
-PHPVER_PROD=7.4
-PHPVER_TEST=8.2
+NODEJS_VERSION="18"
 
 #
 ########################################################################
@@ -15,8 +14,6 @@ PHPVER_TEST=8.2
 # Needed for some LoxBerry scripts
 export LBHOMEDIR=$LBHOME
 export PERL5LIB=$LBHOME/libs/perllib
-export APT_LISTCHANGES_FRONTEND="none"
-export DEBIAN_FRONTEND="noninteractive"
 
 # Run as root
 if (( $EUID != 0 )); then
@@ -50,8 +47,8 @@ done
 shift $((OPTIND-1))
 
 # install needed packages
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install jq git lsb-release
+apt-get update --allow-releaseinfo-change
+apt-get -y install jq git
 
 # Stop loxberry Service
 if /bin/systemctl --no-pager status apache2.service; then
@@ -62,12 +59,12 @@ if /bin/systemctl --no-pager status loxberry.service; then
 	/bin/systemctl stop loxberry.service
 fi
 if /bin/systemctl --no-pager status ssdpd.service; then
-	/bin/systemctl disable ssdpd.service
-	/bin/systemctl stop ssdpd.service
+    /bin/systemctl disable ssdpd.service
+    /bin/systemctl stop ssdpd.service
 fi
 if /bin/systemctl --no-pager status mosquitto.service; then
-	/bin/systemctl disable mosquitto.service
-	/bin/systemctl stop mosquitto.service
+    /bin/systemctl disable mosquitto.service
+    /bin/systemctl stop mosquitto.service
 fi
 if /bin/systemctl --no-pager status createtmpfs.service; then
 	/bin/systemctl disable createtmpfs.service
@@ -238,7 +235,6 @@ if [ ! -z $BRANCH ]; then
 		exit 1
 	else
 		OK "Successfully downloaded LoxBerry sources."
-  		shopt -s dotglob
 		mv $LBHOME/Loxberry/* $LBHOME
 		rm -r $LBHOME/Loxberry
 	fi
@@ -336,14 +332,9 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt reset
 /boot/dietpi/func/dietpi-set_software apt compress disable
 /boot/dietpi/func/dietpi-set_software apt cache clean
+apt update
 
-# Configure PHP - we want PHP7.4 as default while Bookworm only has 8.2
-curl -sL https://packages.sury.org/php/apt.gpg | gpg --dearmor | tee /usr/share/keyrings/deb.sury.org-php.gpg >/dev/null
-echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
-
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-
-if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
+if [ -e "$LBHOME/packages.txt" ]; then
         PACKAGES=""
         echo ""
         while read entry
@@ -366,40 +357,28 @@ if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
                         OK "Add package $PACKAGE to the installation queue..."
                         PACKAGES+="$PACKAGE "
                 fi
-        done < "$LBHOME/packages${TARGET_VERSION_ID}.txt"
+        done < "$LBHOME/packages.txt"
 else
-        FAIL "Could not find packages list: $LBHOME/packages$TARGET_VERSION_ID.txt.\n"
+        FAIL "Could not find packages list: $LBHOME/packages${TARGET_VERSION_ID}.txt.\n"
         exit 1
 fi
 
 echo ""
-echo "These packages will be installed now:"
-echo $PACKAGES
-echo ""
-
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
+apt-get -y install $PACKAGES
 if [ $? != 0 ]; then
-        FAIL "Could not install (at least some) queued packages.\n"
-	exit 1
+        WARNING "Could not install (at least some) queued packages.\n"
 else
         OK "Successfully installed all queued packages.\n"
 fi
 
 /boot/dietpi/func/dietpi-set_software apt compress enable
 /boot/dietpi/func/dietpi-set_software apt cache clean
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+apt update
 
 # Remove dhcpd - See issue 135
 TITLE "Removing dhcpcd5..."
 
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge dhcpcd5
-
-# Remove appamor
-TITLE "Removing AppArmor..."
-
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge apparmor
-
-apt-get -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages --purge autoremove
+apt-get -y purge dhcpcd5
 
 # Adding user loxberry to different additional groups
 TITLE "Adding user LoxBerry to some additional groups..."
@@ -558,61 +537,29 @@ else
 	OK "Successfully set up service for Mosquitto."
 fi
 
-# PHP - we install PHP8.2 for testing and 7.4 for production
-#apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install php${PHPVER_TEST} php${PHPVER_PROD}
+# PHP
+apt install php
+PHPVER=$(apt-cache show php | grep "Depends: " | sed "s/Depends: php//")
+TITLE "Configuring PHP $PHPVER..."
 
-TITLE "Configuring PHP ${PHPVER_PROD}..."
-
-if [ ! -e /etc/php/${PHPVER_PROD} ]; then
-	FAIL "Could not set up PHP - target folder /etc/php/${PHPVER_PROD} does not exist.\n"
-	exit 1
+if [ -e /etc/php/$PHPVER ] && [ ! -e /etc/php/$PHPVER/apache2/conf.d/20-loxberry.ini ]; then
+	mkdir -p /etc/php/$PHPVER/apache2/conf.d
+	mkdir -p /etc/php/$PHPVER/cgi/conf.d
+	mkdir -p /etc/php/$PHPVER/cli/conf.d
+	rm /etc/php/$PHPVER/apache2/conf.d/20-loxberry.ini
+	rm /etc/php/$PHPVER/cgi/conf.d/20-loxberry.ini
+	rm /etc/php/$PHPVER/cli/conf.d/20-loxberry.ini
+	ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini
+	ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/$PHPVER/cgi/conf.d/20-loxberry-apache.ini
+	ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/$PHPVER/cli/conf.d/20-loxberry-cli.ini
 fi
 
-mkdir -p /etc/php/${PHPVER_PROD}/apache2/conf.d
-mkdir -p /etc/php/${PHPVER_PROD}/cgi/conf.d
-mkdir -p /etc/php/${PHPVER_PROD}/cli/conf.d
-rm /etc/php/${PHPVER_PROD}/apache2/conf.d/20-loxberry.ini
-rm /etc/php/${PHPVER_PROD}/cgi/conf.d/20-loxberry.ini
-rm /etc/php/${PHPVER_PROD}/cli/conf.d/20-loxberry.ini
-ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_PROD}/apache2/conf.d/20-loxberry-apache.ini
-ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_PROD}/cgi/conf.d/20-loxberry-apache.ini
-ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/${PHPVER_PROD}/cli/conf.d/20-loxberry-cli.ini
-
-if [ ! -L  /etc/php/${PHPVER_PROD}/apache2/conf.d/20-loxberry-apache.ini ]; then
-	FAIL "Could not set up PHP ${PHPVER_PROD}.\n"
+if [ ! -L  /etc/php/$PHPVER/apache2/conf.d/20-loxberry-apache.ini ]; then
+	FAIL "Could not set up PHP $PHPVER.\n"
 	exit 1
 else
-	OK "Successfully set up PHP ${PHPVER_PROD}."
+	OK "Successfully set up PHP $PHPVER."
 fi
-
-TITLE "Configuring PHP ${PHPVER_TEST}..."
-
-if [ ! -e /etc/php/${PHPVER_TEST} ]; then
-	FAIL "Could not set up PHP - target folder /etc/php/${PHPVER_TEST} does not exist.\n"
-	exit 1
-fi
-
-mkdir -p /etc/php/${PHPVER_TEST}/apache2/conf.d
-mkdir -p /etc/php/${PHPVER_TEST}/cgi/conf.d
-mkdir -p /etc/php/${PHPVER_TEST}/cli/conf.d
-rm /etc/php/${PHPVER_TEST}/apache2/conf.d/20-loxberry.ini
-rm /etc/php/${PHPVER_TEST}/cgi/conf.d/20-loxberry.ini
-rm /etc/php/${PHPVER_TEST}/cli/conf.d/20-loxberry.ini
-ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_TEST}/apache2/conf.d/20-loxberry-apache.ini
-ln -s $LBHOME/system/php/loxberry-apache.ini /etc/php/${PHPVER_TEST}/cgi/conf.d/20-loxberry-apache.ini
-ln -s $LBHOME/system/php/loxberry-cli.ini /etc/php/${PHPVER_TEST}/cli/conf.d/20-loxberry-cli.ini
-
-if [ ! -L  /etc/php/${PHPVER_TEST}/apache2/conf.d/20-loxberry-apache.ini ]; then
-	FAIL "Could not set up PHP ${PHPVER_TEST}.\n"
-	exit 1
-else
-	OK "Successfully set up PHP ${PHPVER_TEST}."
-fi
-
-
-TITLE "Enabling PHP ${PHPVER_PROD}..."
-update-alternatives --set php /usr/bin/php${PHPVER_PROD}
-
 
 # Configuring Apache2
 TITLE "Configuring Apache2..."
@@ -637,7 +584,7 @@ a2dissite 001-default-ssl
 rm $LBHOME/system/apache2/mods-available/php*
 rm $LBHOME/system/apache2/mods-enabled/php*
 cp /etc/apache2.orig/mods-available/php* /etc/apache2/mods-available
-a2enmod php${PHPVER_PROD}
+a2enmod php*
 
 # Disable PrivateTmp for Apache2 on systemd
 if [ ! -e /etc/systemd/system/apache2.service.d/privatetmp.conf ]; then
@@ -645,7 +592,7 @@ if [ ! -e /etc/systemd/system/apache2.service.d/privatetmp.conf ]; then
 	ln -s $LBHOME/system/systemd/apache-privatetmp.conf /etc/systemd/system/apache2.service.d/privatetmp.conf
 fi
 
-if [ ! -L  /etc/systemd/system/apache2.service.d/privatetmp.conf ]; then
+if [ ! -L  /etc/systemd/system/apache2.service.d/privatetmp.conf]; then
 	FAIL "Could not set up Apache2 Private Temp Config.\n"
 	exit 1
 else
@@ -673,17 +620,6 @@ fi
 
 if [ -e /boot/config.txt ]; then # Enable Wifi on Raspberrys
 	G_CONFIG_INJECT 'dtoverlay=disable-wifi' '#dtoverlay=disable-wifi' /boot/config.txt
-fi
-
-# Configuring Python 3 - reenable pip installations
-TITLE "Configuring Python3..."
-
-echo -e '[global]\nbreak-system-packages=true' > /etc/pip.conf
-if [ -e /etc/pip.conf ]; then
-	OK "Python3 configured successfully.\n"
-else
-	FAIL "Could not set up Python 3.\n"
-	exit 1
 fi
 
 # Configuring Samba
@@ -988,16 +924,32 @@ TITLE "Disable root login via ssh and password..."
 /boot/dietpi/func/dietpi-set_software disable_ssh_password_logins root
 
 # Installing NodeJS
-TITLE "Installing NodeJS"
-/boot/dietpi/dietpi-software install 9
+TITLE "Installing YARN and NodeJS"
+if [ $G_HW_MODEL -gt 1 ]; then # Not for Pi1 and Zero1
+	TITLE "Installing NodeJS V$NODEJS_VERSION over the Distro Package (too old...)"
+	curl -fsSL https://deb.nodesource.com/setup_$NODEJS_VERSION.x | bash -
+fi
 
 # Installing YARN
-TITLE "Installing Yarn"
-curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
-echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
+curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+apt update
+apt install -y nodejs
+apt install -y yarn
 
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install yarn
+# Installing PIP2
+TITLE "Installing PIP2"
+
+curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output /tmp/get-pip.py
+python2 /tmp/get-pip.py
+
+# Installing raspi-config if we are on a raspberry
+if echo $HWMODELFILENAME | grep -q "raspberry"; then
+	TITLE "Installing raspi-config"
+	rm /usr/bin/raspi-config
+	curl -L https://raw.githubusercontent.com/RPi-Distro/raspi-config/master/raspi-config -o /usr/bin/raspi-config
+	chmod +x /usr/bin/raspi-config
+fi
 
 # Configuring /etc/hosts
 TITLE "Setting up /etc/hosts and /etc/hostname..."
