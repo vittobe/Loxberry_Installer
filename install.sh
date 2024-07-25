@@ -339,11 +339,17 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt cache clean
 apt update
 
+echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
+read -n 1 -s -r -p "Press any key to continue"
+
 #Debian11FIX
 cp $LBHOME/packages11.txt $LBHOME/packages.txt
 echo $LBHOME
 ls -l $LBHOME
 #
+
+echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
+read -n 1 -s -r -p "Press any key to continue"
 
 if [ -e $LBHOME/packages.txt ]; then
         PACKAGES=""
