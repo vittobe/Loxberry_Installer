@@ -191,6 +191,11 @@ else
 	TARGETRELEASE="tags/$TAG"
 fi
 
+#Debian11FIX
+TAG=2.2.2.2
+BRANCH=loxberry-2.2.2.2
+##
+
 if [ ! -z $BRANCH ]; then
 	LBVERSION="Branch $BRANCH (latest)"
 else
@@ -333,6 +338,10 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt compress disable
 /boot/dietpi/func/dietpi-set_software apt cache clean
 apt update
+
+#Debian11FIX
+cp $LBHOME/packages11.txt $LBHOME/packages.txt
+#
 
 if [ -e $LBHOME/packages.txt ]; then
         PACKAGES=""
