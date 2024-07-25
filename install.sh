@@ -13,8 +13,8 @@ NODEJS_VERSION="18"
 
 
 #Debian11FIX
-TAG=2.2.2.2
-BRANCH=loxberry-2.2.2.2
+TAG=3.0.0.6
+BRANCH=loxberry-3.0.0.6
 ##
 
 
