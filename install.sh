@@ -341,6 +341,8 @@ apt update
 
 #Debian11FIX
 cp $LBHOME/packages11.txt $LBHOME/packages.txt
+echo $LBHOME
+ls -l $LBHOME
 #
 
 if [ -e $LBHOME/packages.txt ]; then
