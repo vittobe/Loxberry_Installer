@@ -11,6 +11,13 @@ NODEJS_VERSION="18"
 #
 ########################################################################
 
+
+#Debian11FIX
+TAG=2.2.2.2
+BRANCH=loxberry-2.2.2.2
+##
+
+
 # Needed for some LoxBerry scripts
 export LBHOMEDIR=$LBHOME
 export PERL5LIB=$LBHOME/libs/perllib
@@ -190,11 +197,6 @@ if [ -z $TAG ]; then
 else
 	TARGETRELEASE="tags/$TAG"
 fi
-
-#Debian11FIX
-TAG=2.2.2.2
-BRANCH=loxberry-2.2.2.2
-##
 
 if [ ! -z $BRANCH ]; then
 	LBVERSION="Branch $BRANCH (latest)"
