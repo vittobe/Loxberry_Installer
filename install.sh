@@ -343,6 +343,7 @@ echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will conti
 read -n 1 -s -r -p "Press any key to continue"
 
 #Debian11FIX
+
 cp $LBHOME/packages11.txt $LBHOME/packages.txt
 echo $LBHOME
 ls -l $LBHOME
@@ -379,6 +380,11 @@ else
         FAIL "Could not find packages list: $LBHOME/packages.txt.\n"
         exit 1
 fi
+
+echo $PACKAGES
+echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
+read -n 1 -s -r -p "Press any key to continue"
+
 
 echo ""
 apt-get -y install $PACKAGES
